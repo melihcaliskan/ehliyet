@@ -82,7 +82,7 @@ export async function buildApp(config: Config, deps: { verifier?: AppStoreVerifi
     if (status >= 500) app.log.error(err);
     return reply.code(status).send({
       error: status >= 500 ? 'internal' : (e.code ?? 'request'),
-      message: status >= 500 ? 'Sunucu hatası' : e.message,
+      message: status >= 500 ? 'Server error' : e.message,
     });
   });
 
