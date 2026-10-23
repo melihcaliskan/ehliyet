@@ -1,5 +1,6 @@
+import 'fastify'; // Vercel, Fastify giriş dosyasını bu import'tan tanır
 import { loadConfig } from './config.ts';
-import { buildApp } from './app.ts';
+import { buildApp } from './build-app.ts';
 
 const config = loadConfig();
 const app = await buildApp(config);

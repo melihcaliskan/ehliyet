@@ -1,6 +1,6 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildApp } from '../src/app.ts';
+import { buildApp } from '../src/build-app.ts';
 import { loadConfig } from '../src/config.ts';
 import { fakeVerifier } from './fake-verifier.ts';
 
