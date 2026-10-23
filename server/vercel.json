@@ -1,10 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "regions": ["fra1"],
-  "functions": {
-    "src/index.ts": {
-      "includeFiles": "{admin/**,legal/**,drizzle/**,certs/**}",
-      "maxDuration": 30
-    }
-  }
+  "regions": ["fra1"]
 }
