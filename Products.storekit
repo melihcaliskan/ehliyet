@@ -1,0 +1,64 @@
+{
+  "identifier" : "8E1A4C55-6C1B-4F3E-9C51-0A7B2D7E1001",
+  "nonRenewingSubscriptions" : [
+    {
+      "displayPrice" : "799.99",
+      "familyShareable" : false,
+      "internalID" : "6740000002",
+      "localizations" : [
+        { "description" : "Tek seferlik ödeme, 6 ay geçerli", "displayName" : "Sınava Kadar · 6 Ay", "locale" : "tr" }
+      ],
+      "productID" : "com.melihcaliskan.ehliyet.premium.6months",
+      "referenceName" : "Premium 6 Ay",
+      "type" : "NonRenewingSubscription"
+    }
+  ],
+  "products" : [
+    {
+      "displayPrice" : "299.99",
+      "familyShareable" : true,
+      "internalID" : "6740000003",
+      "localizations" : [
+        { "description" : "Tüm ders ve direksiyon videoları", "displayName" : "Sadece Videolar", "locale" : "tr" }
+      ],
+      "productID" : "com.melihcaliskan.ehliyet.videos",
+      "referenceName" : "Video Paketi",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6740000000",
+    "_developerTeamID" : "",
+    "_locale" : "tr",
+    "_storefront" : "TUR",
+    "_storeKitErrors" : [ ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21500001",
+      "localizations" : [ ],
+      "name" : "Premium",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [ ],
+          "codeOffers" : [ ],
+          "displayPrice" : "149.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6740000001",
+          "introductoryOffer" : null,
+          "localizations" : [
+            { "description" : "Her ay yenilenir", "displayName" : "Aylık Premium", "locale" : "tr" }
+          ],
+          "productID" : "com.melihcaliskan.ehliyet.premium.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Premium Aylık",
+          "subscriptionGroupID" : "21500001",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [ ]
+        }
+      ]
+    }
+  ],
+  "version" : { "major" : 4, "minor" : 0 }
+}

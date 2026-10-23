@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ehliyet Yönetim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #F2F2F7; --card: #FFFFFF; --ink: #0B1A2C; --muted: #6E6E73; --line: #E5E5EA;
+  --tint: #0062CC; --green: #248A3D; --red: #D70015; --orange: #C93400; --chip: #F2F2F7;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #000; --card: #1C1C1E; --ink: #F5F5F7; --muted: #98989F; --line: #2C2C2E; --tint: #409CFF; --green: #30D158; --red: #FF453A; --orange: #FF9F0A; --chip: #2C2C2E; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 Inter, -apple-system, system-ui, sans-serif; }
+button, input, select, textarea { font: inherit; color: inherit; }
+a { color: var(--tint); }
+.hidden { display: none !important; }
+
+/* Giriş */
+#login { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
+#login form { width: min(380px, 100%); background: var(--card); border-radius: 28px; padding: 28px; display: grid; gap: 14px; box-shadow: 0 10px 40px rgba(0,0,0,.08); }
+#login h1 { margin: 0 0 4px; font-size: 26px; }
+
+/* Düzen */
+.app { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+nav { padding: 20px 12px; border-right: 1px solid var(--line); background: var(--card); position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; gap: 4px; }
+nav .brand { font-weight: 700; font-size: 18px; padding: 4px 12px 16px; }
+nav button { text-align: left; border: 0; background: none; padding: 10px 12px; border-radius: 12px; cursor: pointer; font-weight: 500; }
+nav button.active { background: var(--chip); color: var(--tint); font-weight: 600; }
+nav .spacer { flex: 1; }
+nav .who { font-size: 13px; color: var(--muted); padding: 8px 12px; overflow-wrap: anywhere; }
+main { padding: 24px; max-width: 1280px; width: 100%; }
+h2 { font-size: 28px; margin: 0 0 18px; letter-spacing: -0.01em; }
+h3 { font-size: 16px; margin: 0 0 12px; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.grid { display: grid; gap: 14px; }
+.kpis { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); margin-bottom: 14px; }
+.charts { grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); }
+.card { background: var(--card); border-radius: 22px; padding: 18px; min-width: 0; }
+.kpi .label { color: var(--muted); font-size: 13px; font-weight: 500; }
+.kpi .value { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.kpi .sub { color: var(--muted); font-size: 12px; }
+canvas { max-height: 260px; }
+
+/* Tablolar */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr.click { cursor: pointer; }
+tr.click:hover td { background: var(--chip); }
+.pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--chip); white-space: nowrap; }
+.pill.premium { background: color-mix(in srgb, var(--tint) 15%, transparent); color: var(--tint); }
+.pill.warn { background: color-mix(in srgb, var(--orange) 15%, transparent); color: var(--orange); }
+.pill.ok { background: color-mix(in srgb, var(--green) 15%, transparent); color: var(--green); }
+.muted { color: var(--muted); }
+.num { font-variant-numeric: tabular-nums; text-align: right; }
+
+/* Form */
+input, select, textarea { background: var(--chip); border: 1px solid transparent; border-radius: 12px; padding: 10px 12px; width: 100%; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--tint); outline-offset: 0; }
+label { display: grid; gap: 6px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.btn { border: 0; border-radius: 999px; padding: 10px 18px; font-weight: 600; cursor: pointer; background: var(--tint); color: #fff; white-space: nowrap; }
+.btn.secondary { background: var(--chip); color: var(--ink); }
+.btn.small { padding: 6px 12px; font-size: 13px; }
+.error { color: var(--red); font-size: 14px; }
+
+/* Çekmece */
+.drawer-bg { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 10; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 100%); background: var(--bg); z-index: 11; overflow-y: auto; padding: 22px; box-shadow: -10px 0 40px rgba(0,0,0,.15); }
+.timeline { display: grid; gap: 2px; font-size: 13px; }
+.timeline div { display: grid; grid-template-columns: 120px 1fr; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.timeline code { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+
+@media (max-width: 760px) {
+  .app { grid-template-columns: 1fr; }
+  nav { position: static; height: auto; flex-direction: row; overflow-x: auto; padding: 10px; border-right: 0; border-bottom: 1px solid var(--line); }
+  nav .brand, nav .spacer, nav .who { display: none; }
+  main { padding: 16px; }
+  .charts { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<section id="login" class="hidden">
+  <form id="login-form">
+    <h1>Ehliyet Yönetim</h1>
+    <p class="muted" style="margin:0">Yönetici hesabınla giriş yap.</p>
+    <label>E-posta<input type="email" name="email" required autocomplete="username"></label>
+    <label>Şifre<input type="password" name="password" required autocomplete="current-password"></label>
+    <div class="error" id="login-error"></div>
+    <button class="btn" type="submit">Giriş Yap</button>
+  </form>
+</section>
+
+<div class="app hidden" id="app">
+  <nav>
+    <div class="brand">Ehliyet</div>
+    <button data-page="overview" class="active">Genel Bakış</button>
+    <button data-page="users">Kullanıcılar</button>
+    <button data-page="questions">Sorular</button>
+    <button data-page="reports">Hata Bildirimleri</button>
+    <button data-page="fees">Harçlar</button>
+    <div class="spacer"></div>
+    <div class="who" id="who"></div>
+    <button id="logout">Çıkış</button>
+  </nav>
+  <main id="main"></main>
+</div>
+
+<div id="drawer-root"></div>
+
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmtDate = (d) => d ? new Date(d).toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
+const fmtDay = (d) => d ? new Date(d).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+const lira = (k) => (k / 100).toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + ' ₺';
+const productName = { 'com.melihcaliskan.ehliyet.premium.monthly': 'Aylık', 'com.melihcaliskan.ehliyet.premium.6months': '6 Ay', 'com.melihcaliskan.ehliyet.videos': 'Videolar' };
+
+// Oturum yalnızca bu sekmede tutulur
+const store = {
+  get access() { return sessionStorage.getItem('a'); }, set access(v) { v ? sessionStorage.setItem('a', v) : sessionStorage.removeItem('a'); },
+  get refresh() { return sessionStorage.getItem('r'); }, set refresh(v) { v ? sessionStorage.setItem('r', v) : sessionStorage.removeItem('r'); },
+};
+
+async function api(path, opts = {}, retried = false) {
+  const res = await fetch(path, {
+    ...opts,
+    headers: { 'Content-Type': 'application/json', ...(store.access ? { Authorization: 'Bearer ' + store.access } : {}) },
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  if (res.status === 401 && !retried && store.refresh) {
+    const r = await fetch('/v1/auth/refresh', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ refreshToken: store.refresh }) });
+    if (r.ok) { const s = await r.json(); store.access = s.accessToken; store.refresh = s.refreshToken; return api(path, opts, true); }
+    logout();
+  }
+  const data = res.status === 204 ? null : await res.json().catch(() => null);
+  if (!res.ok) throw new Error(data?.message || 'İstek başarısız (' + res.status + ')');
+  return data;
+}
+
+function logout() { store.access = null; store.refresh = null; show('login'); }
+function show(which) { $('#login').classList.toggle('hidden', which !== 'login'); $('#app').classList.toggle('hidden', which !== 'app'); }
+
+$('#login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  $('#login-error').textContent = '';
+  try {
+    const s = await api('/v1/auth/login', { method: 'POST', body: { email: f.get('email'), password: f.get('password') } });
+    store.access = s.accessToken; store.refresh = s.refreshToken;
+    await boot();
+  } catch (err) { $('#login-error').textContent = err.message; }
+});
+$('#logout').addEventListener('click', () => { if (store.refresh) api('/v1/auth/logout', { method: 'POST', body: { refreshToken: store.refresh } }).catch(() => {}); logout(); });
+
+document.querySelectorAll('nav button[data-page]').forEach((b) => b.addEventListener('click', () => go(b.dataset.page)));
+function go(page) {
+  document.querySelectorAll('nav button[data-page]').forEach((b) => b.classList.toggle('active', b.dataset.page === page));
+  location.hash = page;
+  pages[page]().catch((err) => { $('#main').innerHTML = `<div class="card error">${esc(err.message)}</div>`; });
+}
+
+async function boot() {
+  try {
+    const me = await api('/v1/admin/me');
+    $('#who').textContent = me.email;
+    show('app');
+    go(location.hash.slice(1) || 'overview');
+  } catch (err) {
+    show('login');
+    if (store.access) $('#login-error').textContent = err.message;
+  }
+}
+
+// MARK: Genel bakış
+
+let charts = [];
+const pages = {};
+pages.overview = async () => {
+  const days = Number(sessionStorage.getItem('days') || 30);
+  const d = await api('/v1/admin/overview?days=' + days);
+  charts.forEach((c) => c.destroy()); charts = [];
+  const kpi = (label, value, sub = '') => `<div class="card kpi"><div class="label">${label}</div><div class="value">${value}</div><div class="sub">${sub}</div></div>`;
+  const prod = Object.entries(d.revenue.activeByProduct).map(([k, v]) => `${productName[k] || k}: ${v}`).join(' · ') || 'Aktif satın alma yok';
+  $('#main').innerHTML = `
+    <div class="row" style="justify-content:space-between;margin-bottom:18px">
+      <h2 style="margin:0">Genel Bakış</h2>
+      <select id="days" style="width:auto">${[7, 30, 90].map((n) => `<option value="${n}" ${n === days ? 'selected' : ''}>Son ${n} gün</option>`).join('')}</select>
+    </div>
+    <div class="grid kpis">
+      ${kpi('Toplam kullanıcı', d.users.total, `${d.users.new} yeni`)}
+      ${kpi('Premium kullanıcı', d.revenue.premiumUsers, prod)}
+      ${kpi('Satın alma oranı', '%' + d.revenue.conversion, `${d.revenue.buyersAllTime} kişi satın aldı`)}
+      ${kpi('Günlük aktif', d.users.dau, `Haftalık ${d.users.wau} · Aylık ${d.users.mau}`)}
+      ${kpi('Ort. oturum', d.engagement.avgSessionMin + ' dk', `${d.engagement.sessions} oturum`)}
+      ${kpi('Kişi başı süre', d.engagement.avgMinutesPerUser + ' dk', 'seçili dönemde')}
+      ${kpi('Sınav', d.engagement.examsStarted, `${d.engagement.examsFinished} bitti`)}
+      ${kpi('Günlük 10 soru', d.engagement.dailyCompleted, 'tamamlandı')}
+    </div>
+    <div class="grid charts">
+      <div class="card"><h3>Aktif ve yeni kullanıcılar</h3><canvas id="c-users"></canvas></div>
+      <div class="card"><h3>Uygulamada geçen süre (dk)</h3><canvas id="c-time"></canvas></div>
+      <div class="card"><h3>Satın almalar ve sınavlar</h3><canvas id="c-buy"></canvas></div>
+      <div class="card"><h3>En sık olaylar</h3><div class="table-wrap"><table>
+        <thead><tr><th>Olay</th><th class="num">Adet</th></tr></thead>
+        <tbody>${d.topEvents.map((e) => `<tr><td><code>${esc(e.name)}</code></td><td class="num">${e.n}</td></tr>`).join('') || '<tr><td colspan="2" class="muted">Henüz olay yok</td></tr>'}</tbody>
+      </table></div></div>
+    </div>`;
+  $('#days').addEventListener('change', (e) => { sessionStorage.setItem('days', e.target.value); pages.overview(); });
+
+  const css = getComputedStyle(document.documentElement);
+  const color = (v) => css.getPropertyValue(v).trim();
+  Chart.defaults.color = color('--muted');
+  Chart.defaults.borderColor = color('--line');
+  Chart.defaults.font.family = 'Inter, system-ui';
+  const labels = d.series.map((s) => new Date(s.date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }));
+  const opts = { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10 } } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } };
+  for (const id of ['c-users', 'c-time', 'c-buy']) $('#' + id).parentElement.style.height = '300px';
+  charts.push(new Chart($('#c-users'), { type: 'line', data: { labels, datasets: [
+    { label: 'Aktif', data: d.series.map((s) => s.activeUsers), borderColor: color('--tint'), backgroundColor: color('--tint'), tension: .3, pointRadius: 0 },
+    { label: 'Yeni', data: d.series.map((s) => s.newUsers), borderColor: color('--orange'), backgroundColor: color('--orange'), tension: .3, pointRadius: 0 },
+  ] }, options: opts }));
+  charts.push(new Chart($('#c-time'), { type: 'bar', data: { labels, datasets: [{ label: 'Dakika', data: d.series.map((s) => s.minutes), backgroundColor: color('--tint'), borderRadius: 4 }] }, options: { ...opts, plugins: { legend: { display: false } } } }));
+  charts.push(new Chart($('#c-buy'), { type: 'bar', data: { labels, datasets: [
+    { label: 'Satın alma', data: d.series.map((s) => s.purchases), backgroundColor: color('--green'), borderRadius: 4 },
+    { label: 'Sınav', data: d.series.map((s) => s.exams), backgroundColor: color('--line'), borderRadius: 4 },
+  ] }, options: opts }));
+};
+
+// MARK: Kullanıcılar
+
+pages.users = async (q = '', filter = 'all', page = 1) => {
+  const d = await api(`/v1/admin/users?q=${encodeURIComponent(q)}&filter=${filter}&page=${page}`);
+  const pagesCount = Math.max(1, Math.ceil(d.total / d.pageSize));
+  $('#main').innerHTML = `
+    <h2>Kullanıcılar</h2>
+    <div class="card">
+      <div class="row" style="margin-bottom:12px">
+        <input id="uq" placeholder="E-posta veya isim ara" value="${esc(q)}" style="max-width:320px">
+        <select id="uf" style="width:auto"><option value="all">Tümü</option><option value="premium" ${filter === 'premium' ? 'selected' : ''}>Premium</option></select>
+        <span class="muted">${d.total} kullanıcı</span>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Kullanıcı</th><th>Plan</th><th>Giriş</th><th class="num">Sınav</th><th class="num">Süre</th><th>Son görülme</th><th>Kayıt</th></tr></thead>
+        <tbody>${d.users.map((u) => `
+          <tr class="click" data-id="${u.id}">
+            <td><div>${esc(u.name || u.email || 'Apple kullanıcısı')}</div><div class="muted" style="font-size:12px">${esc(u.email || '')} ${u.role === 'admin' ? '<span class="pill">admin</span>' : ''}</div></td>
+            <td>${u.product ? `<span class="pill premium">${productName[u.product] || u.product}</span>` : '<span class="pill">Ücretsiz</span>'}</td>
+            <td>${u.signIn === 'apple' ? 'Apple' : 'E-posta'}</td>
+            <td class="num">${u.exams}</td>
+            <td class="num">${u.minutes} dk</td>
+            <td>${fmtDate(u.lastSeenAt)}</td>
+            <td>${fmtDay(u.createdAt)}</td>
+          </tr>`).join('') || '<tr><td colspan="7" class="muted">Kullanıcı yok</td></tr>'}</tbody>
+      </table></div>
+      <div class="row" style="justify-content:flex-end;margin-top:12px">
+        <button class="btn secondary small" id="prev" ${page <= 1 ? 'disabled' : ''}>Önceki</button>
+        <span class="muted">${page} / ${pagesCount}</span>
+        <button class="btn secondary small" id="next" ${page >= pagesCount ? 'disabled' : ''}>Sonraki</button>
+      </div>
+    </div>`;
+  let t;
+  $('#uq').addEventListener('input', (e) => { clearTimeout(t); t = setTimeout(() => pages.users(e.target.value, $('#uf').value).then(() => $('#uq').focus()), 300); });
+  $('#uf').addEventListener('change', (e) => pages.users($('#uq').value, e.target.value));
+  $('#prev').addEventListener('click', () => pages.users(q, filter, page - 1));
+  $('#next').addEventListener('click', () => pages.users(q, filter, page + 1));
+  document.querySelectorAll('tr[data-id]').forEach((tr) => tr.addEventListener('click', () => userDrawer(tr.dataset.id)));
+};
+
+function drawer(html) {
+  $('#drawer-root').innerHTML = `<div class="drawer-bg"></div><aside class="drawer" role="dialog" aria-modal="true">${html}</aside>`;
+  const close = () => { $('#drawer-root').innerHTML = ''; };
+  $('.drawer-bg').addEventListener('click', close);
+  document.addEventListener('keydown', function onKey(e) { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', onKey); } });
+  return { close, el: $('.drawer') };
+}
+
+async function userDrawer(id) {
+  const d = await api('/v1/admin/users/' + id);
+  const u = d.user;
+  const { el } = drawer(`
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">${esc(u.name || u.email || 'Kullanıcı')}</h2><button class="btn secondary small" data-close>Kapat</button></div>
+    <p class="muted">${esc(u.email || '')} · ${u.signIn === 'apple' ? 'Apple ile giriş' : 'E-posta ile giriş'} · Kayıt ${fmtDay(u.createdAt)}</p>
+    <div class="grid kpis" style="grid-template-columns:repeat(3,1fr)">
+      <div class="card kpi"><div class="label">Plan</div><div class="value" style="font-size:20px">${d.entitlements.isPremium ? 'Premium' : d.entitlements.scopes.length ? 'Kısmi' : 'Ücretsiz'}</div></div>
+      <div class="card kpi"><div class="label">Toplam süre</div><div class="value" style="font-size:20px">${d.time.minutes} dk</div><div class="sub">${d.time.sessions} oturum</div></div>
+      <div class="card kpi"><div class="label">Sınav</div><div class="value" style="font-size:20px">${d.exams.length}</div></div>
+    </div>
+    <div class="card" style="margin-bottom:14px"><h3>Satın almalar</h3>
+      ${d.purchases.length ? `<table><tbody>${d.purchases.map((p) => `<tr><td>${productName[p.productId] || p.productId}</td><td>${fmtDay(p.purchasedAt)}</td><td>${p.revokedAt ? '<span class="pill warn">İade</span>' : p.expiresAt && new Date(p.expiresAt) < new Date() ? '<span class="pill">Süresi doldu</span>' : '<span class="pill ok">Aktif</span>'}</td><td class="muted">${esc(p.environment)}</td></tr>`).join('')}</tbody></table>` : '<span class="muted">Satın alma yok</span>'}
+    </div>
+    <div class="card" style="margin-bottom:14px"><h3>Son sınavlar</h3>
+      ${d.exams.length ? `<table><tbody>${d.exams.map((e) => `<tr><td>${{ mock: 'Deneme', real: 'Gerçek sınav', topic: 'Konu testi', wrongs: 'Yanlışlar', daily: 'Günlük 10' }[e.kind] || e.kind}</td><td>${fmtDate(e.startedAt)}</td><td class="num">${e.score ?? '—'}</td></tr>`).join('')}</tbody></table>` : '<span class="muted">Sınav yok</span>'}
+    </div>
+    <div class="card"><h3>Aktivite</h3><div class="timeline">
+      ${d.events.map((e) => `<div><span class="muted">${fmtDate(e.at)}</span><span><b>${esc(e.name)}</b> ${e.props ? `<code>${esc(Object.entries(e.props).map(([k, v]) => k + '=' + v).join(' '))}</code>` : ''}</span></div>`).join('') || '<span class="muted">Olay yok</span>'}
+    </div></div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn secondary small" id="role">${u.role === 'admin' ? 'Yöneticilikten çıkar' : 'Yönetici yap'}</button>
+    </div>`);
+  el.querySelector('[data-close]').addEventListener('click', () => { $('#drawer-root').innerHTML = ''; });
+  el.querySelector('#role').addEventListener('click', async () => {
+    await api('/v1/admin/users/' + id, { method: 'PATCH', body: { role: u.role === 'admin' ? 'user' : 'admin' } });
+    userDrawer(id);
+  });
+}
+
+// MARK: Sorular
+
+let topicsCache = [];
+pages.questions = async (topic = '', q = '') => {
+  const d = await api(`/v1/admin/questions?topic=${encodeURIComponent(topic)}&q=${encodeURIComponent(q)}`);
+  topicsCache = d.topics;
+  const topicName = Object.fromEntries(d.topics.map((t) => [t.id, t.name]));
+  $('#main').innerHTML = `
+    <div class="row" style="justify-content:space-between;margin-bottom:18px"><h2 style="margin:0">Sorular</h2><button class="btn" id="new-q">Yeni Soru</button></div>
+    <div class="card">
+      <div class="row" style="margin-bottom:12px">
+        <select id="qt" style="width:auto"><option value="">Tüm konular</option>${d.topics.map((t) => `<option value="${t.id}" ${t.id === topic ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select>
+        <input id="qq" placeholder="Soru metninde ara" value="${esc(q)}" style="max-width:320px">
+        <span class="muted">${d.questions.length} soru</span>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Soru</th><th>Konu</th><th>Durum</th></tr></thead>
+        <tbody>${d.questions.map((x) => `
+          <tr class="click" data-id="${esc(x.id)}">
+            <td><div>${esc(x.text)}</div><div class="muted" style="font-size:12px">Doğru: ${esc(x.options[x.answer])}${x.image ? ' · levha' : ''}</div></td>
+            <td>${esc(topicName[x.topicId] || x.topicId)}</td>
+            <td>${x.active ? '<span class="pill ok">Yayında</span>' : '<span class="pill">Pasif</span>'} ${x.openReports ? `<span class="pill warn">${x.openReports} bildirim</span>` : ''}</td>
+          </tr>`).join('')}</tbody>
+      </table></div>
+    </div>`;
+  const byId = Object.fromEntries(d.questions.map((x) => [x.id, x]));
+  $('#qt').addEventListener('change', (e) => pages.questions(e.target.value, $('#qq').value));
+  let t;
+  $('#qq').addEventListener('input', (e) => { clearTimeout(t); t = setTimeout(() => pages.questions($('#qt').value, e.target.value).then(() => $('#qq').focus()), 300); });
+  $('#new-q').addEventListener('click', () => questionDrawer(null));
+  document.querySelectorAll('tr[data-id]').forEach((tr) => tr.addEventListener('click', () => questionDrawer(byId[tr.dataset.id])));
+};
+
+function questionDrawer(x) {
+  const isNew = !x;
+  x = x || { topicId: topicsCache[0]?.id, text: '', options: ['', '', '', ''], answer: 0, explanation: '', active: true, image: null };
+  const { el, close } = drawer(`
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">${isNew ? 'Yeni Soru' : 'Soruyu Düzenle'}</h2><button class="btn secondary small" data-close>Kapat</button></div>
+    <form class="grid" style="margin-top:16px" id="qf">
+      <label>Konu<select name="topicId">${topicsCache.map((t) => `<option value="${t.id}" ${t.id === x.topicId ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select></label>
+      <label>Soru<textarea name="text" rows="3" required>${esc(x.text)}</textarea></label>
+      ${x.options.map((o, i) => `<label>Şık ${'ABCDE'[i]} <span><input type="radio" name="answer" value="${i}" ${i === x.answer ? 'checked' : ''} aria-label="Doğru cevap ${'ABCDE'[i]}"> doğru cevap</span><input name="opt${i}" value="${esc(o)}" required></label>`).join('')}
+      <label>Açıklama<textarea name="explanation" rows="3" required>${esc(x.explanation)}</textarea></label>
+      <label>Levha (JSON, isteğe bağlı) <input name="image" placeholder='{"shape":"warning","symbol":"figure.walk"}' value='${esc(x.image ? JSON.stringify(x.image) : '')}'></label>
+      <label style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="checkbox" name="active" ${x.active ? 'checked' : ''} style="width:auto"> Yayında</label>
+      <div class="error" id="qerr"></div>
+      <button class="btn" type="submit">Kaydet</button>
+    </form>`);
+  el.querySelector('[data-close]').addEventListener('click', close);
+  el.querySelector('#qf').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    let image = null;
+    try { image = f.get('image') ? JSON.parse(f.get('image')) : null; } catch { el.querySelector('#qerr').textContent = 'Levha JSON geçersiz'; return; }
+    const body = {
+      topicId: f.get('topicId'), text: f.get('text'), explanation: f.get('explanation'),
+      options: x.options.map((_, i) => f.get('opt' + i)), answer: Number(f.get('answer')), active: f.get('active') === 'on', image,
+    };
+    try {
+      await api(isNew ? '/v1/admin/questions' : '/v1/admin/questions/' + encodeURIComponent(x.id), { method: isNew ? 'POST' : 'PATCH', body });
+      close(); pages.questions();
+    } catch (err) { el.querySelector('#qerr').textContent = err.message; }
+  });
+}
+
+// MARK: Hata bildirimleri
+
+pages.reports = async () => {
+  const d = await api('/v1/admin/reports');
+  $('#main').innerHTML = `
+    <h2>Hata Bildirimleri</h2>
+    <div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>Soru</th><th>Bildirim</th><th>Tarih</th><th></th></tr></thead>
+      <tbody>${d.reports.map((r) => `
+        <tr><td style="max-width:360px">${esc(r.text)}</td><td>${esc(r.message)}</td><td>${fmtDate(r.createdAt)}</td>
+        <td><button class="btn small ${r.resolved ? 'secondary' : ''}" data-id="${r.id}" data-resolved="${r.resolved}">${r.resolved ? 'Yeniden aç' : 'Çözüldü'}</button></td></tr>`).join('') || '<tr><td colspan="4" class="muted">Bildirim yok</td></tr>'}</tbody>
+    </table></div></div>`;
+  document.querySelectorAll('button[data-id]').forEach((b) => b.addEventListener('click', async () => {
+    await api('/v1/admin/reports/' + b.dataset.id, { method: 'PATCH', body: { resolved: b.dataset.resolved !== 'true' } });
+    pages.reports();
+  }));
+};
+
+// MARK: Harçlar
+
+pages.fees = async () => {
+  const d = await api('/v1/admin/fees');
+  const groups = {};
+  for (const f of d.fees) (groups[f.validFrom] ??= []).push(f);
+  $('#main').innerHTML = `<h2>Harçlar</h2>` + Object.entries(groups).map(([from, rows]) => `
+    <div class="card" style="margin-bottom:14px"><h3>${fmtDay(from)} tarifesi</h3><div class="table-wrap"><table>
+      <thead><tr><th>Kalem</th><th>Sınıf</th><th class="num">Tutar (₺)</th><th>Kaynak</th><th></th></tr></thead>
+      <tbody>${rows.map((f) => `
+        <tr><td>${esc(f.title)} ${f.isEstimate ? '<span class="pill warn">tahmini</span>' : ''}</td><td>${esc(f.licenseClass || 'Tümü')}</td>
+        <td class="num"><input data-id="${esc(f.id)}" value="${(f.amountKurus / 100).toFixed(2)}" inputmode="decimal" style="width:130px;text-align:right" aria-label="${esc(f.title)} tutarı"></td>
+        <td class="muted" style="font-size:12px">${esc(f.source || '')}</td>
+        <td><span class="muted" data-saved="${esc(f.id)}"></span></td></tr>`).join('')}</tbody>
+    </table></div></div>`).join('');
+  document.querySelectorAll('input[data-id]').forEach((inp) => inp.addEventListener('change', async () => {
+    const amount = Math.round(parseFloat(inp.value.replace(',', '.')) * 100);
+    const badge = document.querySelector(`[data-saved="${CSS.escape(inp.dataset.id)}"]`);
+    if (!Number.isFinite(amount)) { badge.textContent = 'Geçersiz'; return; }
+    try { await api('/v1/admin/fees/' + encodeURIComponent(inp.dataset.id), { method: 'PATCH', body: { amountKurus: amount, isEstimate: false } }); badge.textContent = 'Kaydedildi'; }
+    catch (err) { badge.textContent = err.message; }
+  }));
+};
+
+boot();
+</script>
+</body>
+</html>
